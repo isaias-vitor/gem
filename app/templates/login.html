@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <div class="d-flex vh-100 justify-content-center align-items-center">
+        
+            <div class="container col-5 border rounded p-5">
+                    <h2 class="text-center mb-5">GEM Morrinhos</h2>
+
+                    <!-- Exibir mensagens Flash -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Formulário de Login -->
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Campo de Usuário -->
+                        <label class="form-label">{{ form.username.label }}</label>
+                        
+                            {{ form.username(class="form-control mb-4", placeholder="Digite seu usuário") }}
+                            
+
+                        <!-- Campo de Senha -->
+                        
+                        <label class="label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control mb-4", placeholder="Digite sua senha") }}
+
+                        <!-- Botão de Envio -->
+                        
+                            
+                        {{ form.submit(class="btn btn-primary col-12") }}
+                            
+                    </form>
+            </div>
+    </div>
+    
+{% endblock content %}
+    
+</body>
+</html>
