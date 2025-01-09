@@ -1,4 +1,5 @@
 from flask import *
+from flask_login import login_required
 
 from .database import SupabaseClient
 from .forms import *
