@@ -1,3 +1,139 @@
 body{
     background-color: bisque;
 }
+
+/* Menus */
+/* Menu Superior */
+.top-nav {
+    background: #e6e6e6;
+    color: rgb(32, 32, 32);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1001;
+}
+
+.menu-toggle {
+    display: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    order: 2; /* Move o botão para a direita */
+}
+
+.site-title {
+    order: 1; /* Move o título para a esquerda */
+}
+
+/* Menu Lateral */
+.sidebar {
+    width: 250px;
+    background: #e6e6e6ea;
+    color: grey;
+    position: fixed;
+    top: 60px;
+    right: -250px; /* Mudado de left para right */
+    height: calc(100% - 120px);
+    transition: 0.3s;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.sidebar.active {
+    right: 0; /* Mudado de left para right */
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 1rem;
+}
+
+.sidebar li {
+    padding: 0.5rem 0;
+}
+
+.sidebar a {
+    color: grey;
+    text-decoration: none;
+}
+
+/* Conteúdo Principal */
+.main-content {
+    flex: 1;
+    padding: 1rem;
+    margin-bottom: 60px;
+}
+
+/* Menu Inferior Mobile */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #e6e6e6;
+    padding: 0.5rem;
+    z-index: 1001;
+}
+
+.bottom-nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: space-around;
+}
+
+.bottom-nav a {
+    color: grey;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+
+    .bottom-nav {
+        display: block;
+    }
+}
+
+
+
+/* Botões */
+/* Passou */
+.btn-passou{
+    border: 1px solid rgb(156, 228, 156) !important;
+    background-color: rgb(177, 248, 177) !important;
+    color: rgb(26, 119, 26) !important;
+}
+/* Não passou */
+.btn-nao_passou{
+    border: 1px solid rgb(179, 179, 179) !important;
+    background-color: rgb(211, 211, 211) !important;
+    color: rgb(47, 48, 47) !important;
+}
+
+
+/* Barra de rolagem */
+/* Deixa a área da barra de rolagem transparente */
+::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+/* Torna a barra deslizante semitransparente */
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2); 
+    border-radius: 10px;
+}
+
+/* Deixa a barra de rolagem mais visível ao passar o mouse */
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* Ajusta a largura da barra */
+::-webkit-scrollbar {
+    width: 8px;
+}

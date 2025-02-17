@@ -1,3 +1,164 @@
-<html>
-    <h1>{{teste.created_at}}</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Responsivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Menu Superior */
+        .top-nav {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            order: 2; /* Move o botão para a direita */
+        }
+
+        .site-title {
+            order: 1; /* Move o título para a esquerda */
+        }
+
+        /* Menu Lateral */
+        .sidebar {
+            width: 250px;
+            background: #444;
+            color: white;
+            position: fixed;
+            top: 60px;
+            right: -250px; /* Mudado de left para right */
+            height: calc(100% - 120px);
+            transition: 0.3s;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar.active {
+            right: 0; /* Mudado de left para right */
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 1rem;
+        }
+
+        .sidebar li {
+            padding: 0.5rem 0;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            margin-bottom: 60px;
+        }
+
+        /* Menu Inferior Mobile */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #333;
+            padding: 0.5rem;
+        }
+
+        .bottom-nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .bottom-nav a {
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .bottom-nav {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu Superior -->
+    <nav class="top-nav">
+        <h1 class="site-title">Meu Site</h1>
+        <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+    </nav>
+
+    <!-- Menu Lateral -->
+    <div class="sidebar">
+        <ul>
+            <li><a href="#">Início</a></li>
+            <li><a href="#">Sobre</a></li>
+            <li><a href="#">Serviços</a></li>
+            <li><a href="#">Contato</a></li>
+        </ul>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+        <h2>Conteúdo Principal</h2>
+        <p>Seu conteúdo vai aqui...</p>
+    </main>
+
+    <!-- Menu Inferior Mobile -->
+    <nav class="bottom-nav">
+        <ul>
+            <li><a href="#">🏠<br>Início</a></li>
+            <li><a href="#">📱<br>Serviços</a></li>
+            <li><a href="#">📞<br>Contato</a></li>
+        </ul>
+    </nav>
+
+    <script>
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+
+        // Fecha o menu lateral ao clicar fora dele
+        document.addEventListener('click', function(event) {
+            const sidebar = document.querySelector('.sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
 </html>

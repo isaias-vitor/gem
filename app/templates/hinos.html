@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1 class="text-center my-3">Hinos</h1>
+
+    {% if current_user.nivel == 'instrutor': %}
+        <form method="POST" action="/trocaAluno">
+            <select id="select_field" class="form-select" name="select_field" onchange="this.form.submit()">
+                {% for student in students: %}
+                    {% if student.id == act_student.id %}
+                        <option value="{{student.id}}" selected>{{student.nome}}</option>
+                    {% else %}
+                        <option value="{{student.id}}">{{student.nome}}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </form>
+    {% endif %}
+
+    <div class="container mt-4">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs nav-fill" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active text-primary" id="principal_voice-tab" data-bs-toggle="tab" data-bs-target="#principal_voice" type="button" role="tab" aria-controls="principal_voice" aria-selected="true"> 
+                        Voz Principal
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-primary" id="alternative_voice-tab" data-bs-toggle="tab" data-bs-target="#alternative_voice"
+                        type="button" role="tab" aria-controls="alternative_voice" aria-selected="false">
+                    Voz Alternativa
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="principal_voice" role="tabpanel" aria-labelledby="principal_voice-tab">
+                <div class="p-4 row">
+
+                    {% set progress = (((hymns.principal | length)*100)/480) | round(2) %}
+
+                    <div class="progress my-4 p-0">
+                        <div class="progress-bar" role="progressbar" aria-label="Info example" style="width: {{progress}}%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">{{progress}}%</div>
+                    </div>
+
+                    {% set i_hymns = {'indice':0} %}
+                    {% for i in range(1, 481) %}
+                        {% if i in list_hymns_principal_approved %}
+                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
+                                <button class="btn btn-passou col-11" data-bs-toggle="modal" data-date="{{ hymns['principal'][i_hymns.indice]['date_approvation'] }}" data-instructor="{{ hymns['principal'][i_hymns.indice]['instructor'] }}" data-obs="{{ hymns['principal'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_principal" onclick="configura_modal_cancel_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
+                            </div>
+                            {% set _= i_hymns.update({'indice':i_hymns.indice+1}) %}
+                        {% else %}
+                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
+                                <button id="approveHymn_{{ i }}" class="btn btn-nao_passou col-11" data-bs-toggle="modal" data-bs-target="#modalAprovacaoPrincipal" onclick="configura_modal_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    
+
+                </div>
+            </div>
+            <div class="tab-pane fade" id="alternative_voice" role="tabpanel" aria-labelledby="alternative_voice-tab">
+                <div class="p-4 row">
+                    {% set progress = (((hymns.alternative | length)*100)/480) | round(2) %}
+
+                    <div class="progress my-4 p-0">
+                        <div class="progress-bar" role="progressbar" style="width: {{progress}}%" aria-valuenow="{{progress}}" aria-valuemin="0" aria-valuemax="100">{{progress}}%</div>
+                    </div>
+
+                    {% set i_hymns = {'indice':0} %}
+                    {% for i in range(1, 481) %}
+                        {% if i in list_hymns_alternative_approved %}
+                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
+                                <button class="btn btn-passou col-11" data-bs-toggle="modal" data-date="{{ hymns['alternative'][i_hymns.indice]['date_approvation'] }}" data-instructor="{{ hymns['alternative'][i_hymns.indice]['instructor'] }}" data-obs="{{ hymns['alternative'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_alternative" onclick="configura_modal_cancel_alternative({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
+                            </div>
+                            {% set _= i_hymns.update({'indice':i_hymns.indice+1}) %}
+                        {% else %}
+                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
+                                <button id="approveHymn_{{ i }}" class="btn btn-nao_passou col-11" data-bs-toggle="modal" data-bs-target="#modalAprovacaoAlternativa" onclick="configura_modal_alternative({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.nivel == 'instrutor': %}
+        <!-- Modal de confirmação de aprovação -->
+        <div class="modal fade" id="modalAprovacaoPrincipal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modalAprovacaoPrincipalLabel">Confirmação de Aprovação</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{url_for('routes.hinos')}}" method="POST">
+
+                            {{form_approval_principal_hymn.hidden_tag()}}
+                            <input type="hidden" name="form_type" value="principal_hymn">
+
+                            {{form_approval_principal_hymn.hymn_number(id='hymn_number_principal', hidden="hidden")}}
+                            {{form_approval_principal_hymn.candidate_id(id='candidate_id_principal', hidden="hidden")}}
+                            <div class="mb-4">
+                                <label for="" class="form-label mb-0">Data</label>
+                                {{form_approval_principal_hymn.date(class_="form-control", id="data_principal")}}
+                            </div>
+                            <div class="mb-3">
+                                <label for="" class="form-label mb-0">Observações</label>
+                                {{form_approval_principal_hymn.observation(class_="form-control")}}
+                            </div>
+                            <div class="d-flex justify-content-center">
+                                {{form_approval_principal_hymn.submit(class_="btn btn-success")}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalAprovacaoAlternativa" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modalAprovacaoAlternativaLabel">Confirmação de Aprovação</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{url_for('routes.hinos')}}" method="POST">
+                            {{form_approval_alternative_hymn.hidden_tag()}}
+                            <input type="hidden" name="form_type" value="alternative_hymn">
+                            {{form_approval_alternative_hymn.hymn_number(id='hymn_number_alternative', hidden="hidden")}}
+                            {{form_approval_alternative_hymn.candidate_id(id='candidate_id_alternative', hidden="hidden")}}
+                            <div class="mb-4">
+                                <label for="" class="form-label mb-0">Data</label>
+                                {{form_approval_alternative_hymn.date(class_="form-control", id="data_alternative")}}
+                            </div>
+                            <div class="mb-3">
+                                <label for="" class="form-label mb-0">Observações</label>
+                                {{form_approval_alternative_hymn.observation(class_="form-control")}}
+                            </div>
+                            <div class="d-flex justify-content-center">
+                                {{form_approval_alternative_hymn.submit(class_="btn btn-success")}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Modal de visualização pós-aprovação -->
+    <div class="modal fade" id="modal_postApproval_principal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Hino Aprovado</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{url_for('routes.hinos')}}" method="POST">
+                        {{cancel_approval_principal.hidden_tag()}}
+                        <input type="hidden" name="form_type" value="cancel_principal_hymn">
+                        {{cancel_approval_principal.hymn_number(id='hymn_numberCancel_principal', hidden="hidden")}}
+                        {{cancel_approval_principal.candidate_id(id='candidate_idCancel_principal', hidden="hidden")}}
+                        <div class="mb-4">
+                            <label for="" class="form-label mb-0">Data</label>
+                            <input type="date" id="dateApprovedPrincipal" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label mb-0">Instrutor</label>
+                            <input type="text" id="instructorApprovedPrincipal" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label mb-0">Observações</label>
+                            <textarea id="observationsApprovedPrincipal" class="form-control" disabled></textarea>
+                        </div>
+                        {% if current_user.nivel == 'instrutor': %}
+                            <div class="d-flex justify-content-center">
+                                {{cancel_approval_principal.cancel(class_="btn btn-danger")}}
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modal_postApproval_alternative" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Hino Aprovado</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{url_for('routes.hinos')}}" method="POST">
+                        {{cancel_approval_alternative.hidden_tag()}}
+                        <input type="hidden" name="form_type" value="cancel_alternative_hymn">
+                        {{cancel_approval_alternative.hymn_number(id='hymn_numberCancel_alternative', hidden="hidden")}}
+                        {{cancel_approval_alternative.candidate_id(id='candidate_idCancel_alternative', hidden="hidden")}}
+                        <div class="mb-4">
+                            <label for="" class="form-label mb-0">Data</label>
+                            <input type="date" id="dateApprovedAlternative" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label mb-0">Instrutor</label>
+                            <input type="text" id="instructorApprovedAlternative" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label mb-0">Observações</label>
+                            <textarea id="observationsApprovedAlternative" class="form-control" disabled></textarea>
+                        </div>
+                        {% if current_user.nivel == 'instrutor': %}
+                            <div class="d-flex justify-content-center">
+                                {{cancel_approval_alternative.cancel(class_="btn btn-danger")}}
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    <script>
+        function configura_modal_principal(hymn_number, candidate_id){
+            document.getElementById('data_principal').value = new Date().toISOString().split('T')[0];
+            
+            const hymn = document.getElementById('hymn_number_principal');
+            const candidate = document.getElementById('candidate_id_principal');
+
+            hymn.value = hymn_number;
+            candidate.value = candidate_id;
+        }
+        function configura_modal_alternative(hymn_number, candidate_id){
+            document.getElementById('data_alternative').value = new Date().toISOString().split('T')[0];
+            
+            const hymn = document.getElementById('hymn_number_alternative');
+            const candidate = document.getElementById('candidate_id_alternative');
+
+            hymn.value = hymn_number;
+            candidate.value = candidate_id;
+        }
+        function configura_modal_cancel_principal(hymn_number, candidate_id){            
+            const hymn = document.getElementById('hymn_numberCancel_principal');
+            const candidate = document.getElementById('candidate_idCancel_principal');
+
+            // Força a atualização no DOM
+            hymn.setAttribute("value", hymn_number);
+            candidate.setAttribute("value", candidate_id);
+        }
+        function configura_modal_cancel_alternative(hymn_number, candidate_id){            
+            const hymn = document.getElementById('hymn_numberCancel_alternative');
+            const candidate = document.getElementById('candidate_idCancel_alternative');
+
+            // Força a atualização no DOM
+            hymn.setAttribute("value", hymn_number);
+            candidate.setAttribute("value", candidate_id);
+        }
+    </script>
+
+    <script>
+        // Adiciona um ouvinte de evento para os botões
+        var btn_hymn = document.querySelectorAll('[data-bs-toggle="modal"]');
+    
+        btn_hymn.forEach(function(button) {
+            button.addEventListener('click', function() {
+                var date = button.getAttribute('data-date');
+                var instructor = button.getAttribute('data-instructor');
+                var obs = button.getAttribute('obs')
+                document.getElementById('dateApprovedPrincipal').value = date
+                document.getElementById('instructorApprovedPrincipal').value = instructor
+                document.getElementById('observationsApprovedPrincipal').textContent = obs
+                document.getElementById('dateApprovedAlternative').value = date
+                document.getElementById('instructorApprovedAlternative').value = instructor
+                document.getElementById('observationsApprovedAlternaticeada').textContent = obs
+            });
+        });
+    </script>
+  
+
+{% endblock content %}
