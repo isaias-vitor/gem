@@ -30,7 +30,7 @@
 </header>
 <body >
     <div class="container main-content">
-        {% block content %}
+        {% block content %}''
     
         {% endblock %}
     </div>
@@ -39,7 +39,8 @@
     {% block menu_inferior %}
     <nav class="bottom-nav rounded-top shadow-lg">
         <ul class="mb-0">
-            <li><a href="#"><i style="font-size: 1.5rem;" class="bi bi-list-check"></i></a></li>
+            <li><a href="{{url_for('routes.ficha')}}"><i style="font-size: 1.5rem;" class="bi bi-list-check"></i></a></li>
+            <!-- <li><a href="#"><i style="font-size: 1.5rem;" class="bi bi-list-check"></i></a></li> -->
             <!-- <li><a href="#">📱<br>Serviços</a></li>
             <li><a href="#">📞<br>Contato</a></li> -->
         </ul>

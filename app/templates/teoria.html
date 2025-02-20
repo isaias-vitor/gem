@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+    <h1 class="text-center my-3">Teoria Musical</h1>
+
+    {% if current_user.nivel == 'instrutor': %}
+        <form method="POST" action="/trocaAluno">
+            <select id="select_field" class="form-select" name="select_field" onchange="this.form.submit()">
+                {% for student in students: %}
+                    {% if student.id == act_student.id %}
+                        <option value="{{student.id}}" selected>{{student.nome}}</option>
+                    {% else %}
+                        <option value="{{student.id}}">{{student.nome}}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </form>
+    {% endif %}
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs nav-fill mt-5" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-primary" id="principal_voice-tab" data-bs-toggle="tab" data-bs-target="#principal_voice" type="button" role="tab" aria-controls="principal_voice" aria-selected="true"> 
+                Fixação
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active text-primary" id="alternative_voice-tab" data-bs-toggle="tab" data-bs-target="#alternative_voice"
+                    type="button" role="tab" aria-controls="alternative_voice" aria-selected="false">
+                Prático
+            </button>
+        </li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade" id="principal_voice" role="tabpanel" aria-labelledby="principal_voice-tab">
+            <div class="p-3 row">
+
+                {% set progress = (((fixing_lessons_approved | length)*100)//12) | round(2) %}
+
+                <div class="progress my-4 p-0">
+                    <div class="progress-bar" role="progressbar" aria-label="Info example" style="width: {{ progress }}%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">{{ progress }}%</div>
+                </div>
+
+                <table class="table mt-4 text-center table-borderless table-hover">
+                    <thead>
+                        <th>Fase</th>
+                        <th>Página</th>
+                        <th>Instrutor</th>
+                        <th>Correção</th>
+                    </thead>
+                    <tbody>
+                        {% set pages = [[16],[20,22,23],[28],[38,40],[49],[59,63],[69],[81]] %}
+                        {% set i_lessons = {'indice':0} %}
+                        {% for i in range(0, 8): %}
+                            {% for page in pages[i]: %}
+                                {% if page in fixing_lessons_approved_number: %}
+                                    <tr class="table-info" onclick="configura_modal_cancel_fixacao(this, {{act_student.id}}, {{page}})" data-bs-target="#modalCancelamentoFixacao" data-bs-toggle="modal">
+                                        <td>{{ ((i+1) | string).zfill(2) }}</td>
+                                        <td>{{ page }}</td>
+                                        <td>{{ fixing_lessons_approved[i_lessons.indice].instructor }}</td>
+                                        <td>{{ fixing_lessons_approved[i_lessons.indice].date_approvation }}</td>
+                                    </tr>
+                                    {% set _= i_lessons.update({'indice':i_lessons.indice+1}) %}
+                                {% else %}
+                                    <tr onclick="configura_modal_fixacao(this, {{act_student.id}})" data-bs-target="#modalAprovacaoFixacao" data-bs-toggle="modal" data-bs-target="#modalAprovacaoFixacao">
+                                        <td>{{ ((i+1) | string).zfill(2) }}</td>
+                                        <td>{{ page }}</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade show active" id="alternative_voice" role="tabpanel" aria-labelledby="alternative_voice-tab">
+            <div class="p-3 row justify-content-center">
+
+                <div class="progress my-4 p-0">
+                    <div class="progress-bar" role="progressbar" style="width: 15%" aria-valuenow="%" aria-valuemin="0" aria-valuemax="100">%</div>
+                </div>
+
+                {% set i_practical_lessons = {'indice':0} %}
+                {% for i in range(1, 114) %}
+                    <div class="col-auto p-1 mt-2">
+                    {% if i in practical_lessons_approved_number %}
+                        {% if practical_lessons_approved[i_practical_lessons.indice].parcial%}
+                            <button class="btn btn-passou_parcial p-3 m-0 rounded-circle" onclick="configura_modal_cancel_practical({{i}}, {{act_student.id}})" data-bs-target="#modal_postApproval_practical" data-bs-toggle="modal" data-date="{{practical_lessons_approved[i_practical_lessons.indice].date_approvation}}" data-instructorPractical="{{practical_lessons_approved[i_practical_lessons.indice].instructor}}" data-obsPractical="{{practical_lessons_approved[i_practical_lessons.indice].obs}}" data-parcial="{{practical_lessons_approved[i_practical_lessons.indice].parcial}}">{{ (i | string).zfill(3) }}</button>
+                        {% else %}
+                            <button class="btn btn-passou p-3 m-0 rounded-circle" onclick="configura_modal_cancel_practical({{i}}, {{act_student.id}})" data-bs-target="#modal_postApproval_practical" data-bs-toggle="modal" data-date="{{practical_lessons_approved[i_practical_lessons.indice].date_approvation}}" data-instructorPractical="{{practical_lessons_approved[i_practical_lessons.indice].instructor}}" data-obsPractical="{{practical_lessons_approved[i_practical_lessons.indice].obs}}" data-parcial="{{practical_lessons_approved[i_practical_lessons.indice].parcial}}">{{ (i | string).zfill(3) }}</button>
+                        {% endif %}
+                        {% set _= i_practical_lessons.update({'indice':i_practical_lessons.indice+1}) %}
+                    {% else %}
+                        <button onclick="configura_modal_practical({{i}}, {{act_student.id}})" class="btn btn-nao_passou p-3 m-0 rounded-circle" data-bs-target="#modalAprovacaoPratico" data-bs-toggle="modal">{{ (i | string).zfill(3) }}</button>
+                    {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.nivel == 'instrutor': %}
+        <!-- Modal de Aprovação de Exercícios de Fixação -->
+        <div class="modal fade" id="modalAprovacaoFixacao" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modalAprovacaoFixacaoLabel">Confirmação de Aprovação</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{url_for('routes.teoria')}}" method="POST">
+
+                            {{form_approval_fixing_exercice.hidden_tag()}}
+                            <input type="hidden" name="form_type" value="fixing_exercice_approval">
+
+                            {{form_approval_fixing_exercice.lesson_number(id='lesson_number_fixing', hidden="hidden")}}
+                            {{form_approval_fixing_exercice.candidate_id(id='candidate_id_fixing', hidden="hidden")}}
+                            {{form_approval_fixing_exercice.date(class_="form-control", id="data_fixing", hidden="hidden")}}
+
+                            Deseja realmente aprovar o exercício do candidato?
+                            
+                            <div class="d-flex justify-content-center">
+                                {{form_approval_fixing_exercice.submit(class_="btn btn-outline-success px-5 mt-5")}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal de Aprovação de Exercícios de Prático -->
+        <div class="modal fade" id="modalAprovacaoPratico" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modalAprovacaoPraticoLabel">Confirmação de Aprovação</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{url_for('routes.teoria')}}" method="POST">
+
+                            {{form_approval_practical_exercice.hidden_tag()}}
+                            <input type="hidden" name="form_type" value="practical_exercice_approval">
+                            {{form_approval_practical_exercice.lesson_number(id='lesson_number_practical', hidden="hidden")}}
+                            {{form_approval_practical_exercice.candidate_id(id='candidate_id_practical', hidden="hidden")}}
+                            <div class="mb-4">
+                                <label for="" class="form-label mb-0">Data</label>
+                                {{form_approval_practical_exercice.date(class_="form-control", id="date_practical")}}
+                            </div>
+                            <div class="mb-3">
+                                <label for="" class="form-label mb-0">Observações</label>
+                                {{form_approval_practical_exercice.observation(class_="form-control")}}
+                            </div>
+                            <div class="d-flex justify-content-center mt-4">
+                                {{form_approval_practical_exercice.submit_complete(class_="btn btn-success me-3")}}
+                                {{form_approval_practical_exercice.submit_parcial(class_="btn btn-warning")}}
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="modalCancelamentoFixacao" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="modalCancelamentoFixacaoLabel">Cancelamento de Aprovação</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{url_for('routes.teoria')}}" method="POST">
+
+                            {{form_cancel_fixing_exercice.hidden_tag()}}
+                            <input type="hidden" name="form_type" value="fixing_exercice_cancel">
+
+                            {{form_cancel_fixing_exercice.candidate_id(id='candidate_id_fixing_cancel', hidden="hidden")}}
+                            {{form_cancel_fixing_exercice.lesson_number(id='lesson_number_fixing_cancel', hidden="hidden")}}
+                            
+                            Deseja realmente cancelar a aprovação do exercício do candidato?
+
+                            <div class="d-flex justify-content-center mt-5">
+
+                                {{form_cancel_fixing_exercice.cancel(class_="btn btn-outline-danger")}}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="modal_postApproval_practical" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="modal_postApproval_practicalLabel">Hino Aprovado</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{url_for('routes.teoria')}}" method="POST">
+                        {{form_cancel_practical_exercice.hidden_tag()}}
+                        <input type="hidden" name="form_type" value="cancel_practical_lesson">
+                        {{form_cancel_practical_exercice.lesson_number(id='lesson_numberCancel_practical', hidden="hidden")}}
+                        {{form_cancel_practical_exercice.candidate_id(id='candidate_idCancel_practical', hidden="hidden")}}
+                        <div class="mb-4">
+                            <label for="" class="form-label mb-0">Data</label>
+                            <input type="date" id="dateApprovedPractical" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label mb-0">Instrutor</label>
+                            <input type="text" id="instructorApprovedPractical" class="form-control" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label mb-0">Observações</label>
+                            <textarea id="observationsApprovedPractical" class="form-control" disabled></textarea>
+                        </div>
+                        {% if current_user.nivel == 'instrutor': %}
+                            <div class="d-flex justify-content-center">
+                                {{form_cancel_practical_exercice.cancel(class_="btn btn-danger")}}
+                                {{form_cancel_practical_exercice.submit_complete(class_="btn btn-success ms-3", id="aprova_completo")}}
+                                {{form_cancel_practical_exercice.submit_parcial(class_="btn btn-warning ms-3", id="aprova_parcial")}}
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function configura_modal_fixacao(tr, candidate_id){
+            document.getElementById('data_fixing').value = new Date().toISOString().split('T')[0];
+            
+            const lesson = document.getElementById('lesson_number_fixing');
+            const candidate = document.getElementById('candidate_id_fixing');
+            
+            lesson.value = tr.cells[1].innerText;
+            candidate.value = candidate_id;
+        }
+        function configura_modal_practical(lesson_number, candidate_id){
+            document.getElementById('date_practical').value = new Date().toISOString().split('T')[0];
+            
+            const lesson = document.getElementById('lesson_number_practical');
+            const candidate = document.getElementById('candidate_id_practical');
+            
+            lesson.value = lesson_number;
+            candidate.value = candidate_id;
+        }
+        function configura_modal_cancel_fixacao(tr, candidate_id){            
+            const lesson = document.getElementById('lesson_number_fixing_cancel');
+            const candidate = document.getElementById('candidate_id_fixing_cancel');
+            
+            lesson.value = tr.cells[1].innerText;
+            candidate.value = candidate_id;
+        }
+        function configura_modal_cancel_practical(lesson_number, candidate_id){
+            document.getElementById('dateApprovedPractical').value = new Date().toISOString().split('T')[0];
+            
+            const lesson = document.getElementById('lesson_numberCancel_practical');
+            const candidate = document.getElementById('candidate_idCancel_practical');
+
+
+            
+            lesson.value = lesson_number;
+            candidate.value = candidate_id;
+        }
+    </script>
+
+<script>
+    // Adiciona um ouvinte de evento para os botões
+    var btn_lesson = document.querySelectorAll('[data-bs-toggle="modal"]');
+
+    btn_lesson.forEach(function(button) {
+        button.addEventListener('click', function() {
+            var datePractical = button.getAttribute('data-date');
+            var instructorPractical = button.getAttribute('data-instructorPractical');
+            var obsPractical = button.getAttribute('data-obsPractical')
+            var is_parcial = button.getAttribute('data-parcial')
+
+            document.getElementById('dateApprovedPractical').value = datePractical
+            document.getElementById('instructorApprovedPractical').value = instructorPractical
+            document.getElementById('observationsApprovedPractical').textContent = obsPractical
+
+            if(is_parcial == 'True'){
+                document.getElementById('aprova_parcial').hidden = true
+                document.getElementById('aprova_completo').hidden = false
+            }else{
+                document.getElementById('aprova_parcial').hidden = false
+                document.getElementById('aprova_completo').hidden = true
+            }
+        });
+    });
+</script>
+
+{% endblock content %}

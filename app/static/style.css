@@ -108,6 +108,12 @@ body{
     background-color: rgb(177, 248, 177) !important;
     color: rgb(26, 119, 26) !important;
 }
+/* Passou Parcial*/
+.btn-passou_parcial{
+    border: 1px solid rgb(228, 223, 156) !important;
+    background-color: rgb(247, 248, 177) !important;
+    color: rgb(224, 194, 24) !important;
+}
 /* Não passou */
 .btn-nao_passou{
     border: 1px solid rgb(179, 179, 179) !important;

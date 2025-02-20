@@ -37,7 +37,7 @@
         <!-- Tab panes -->
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="principal_voice" role="tabpanel" aria-labelledby="principal_voice-tab">
-                <div class="p-4 row">
+                <div class="p-3 row">
 
                     {% set progress = (((hymns.principal | length)*100)/480) | round(2) %}
 
@@ -47,24 +47,19 @@
 
                     {% set i_hymns = {'indice':0} %}
                     {% for i in range(1, 481) %}
+                        <div class="mt-2 px-1 col-auto">
                         {% if i in list_hymns_principal_approved %}
-                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
-                                <button class="btn btn-passou col-11" data-bs-toggle="modal" data-date="{{ hymns['principal'][i_hymns.indice]['date_approvation'] }}" data-instructor="{{ hymns['principal'][i_hymns.indice]['instructor'] }}" data-obs="{{ hymns['principal'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_principal" onclick="configura_modal_cancel_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
-                            </div>
+                            <button class="btn btn-passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-datePrincipal="{{ hymns['principal'][i_hymns.indice]['date_approvation'] }}" data-instructorPrincipal="{{ hymns['principal'][i_hymns.indice]['instructor'] }}" data-obsPrincipal="{{ hymns['principal'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_principal" onclick="configura_modal_cancel_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
                             {% set _= i_hymns.update({'indice':i_hymns.indice+1}) %}
                         {% else %}
-                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
-                                <button id="approveHymn_{{ i }}" class="btn btn-nao_passou col-11" data-bs-toggle="modal" data-bs-target="#modalAprovacaoPrincipal" onclick="configura_modal_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
-                            </div>
+                            <button id="approveHymn_{{ i }}" class="btn btn-nao_passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#modalAprovacaoPrincipal" onclick="configura_modal_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
                         {% endif %}
+                        </div>
                     {% endfor %}
-
-                    
-
                 </div>
             </div>
             <div class="tab-pane fade" id="alternative_voice" role="tabpanel" aria-labelledby="alternative_voice-tab">
-                <div class="p-4 row">
+                <div class="p-3 row">
                     {% set progress = (((hymns.alternative | length)*100)/480) | round(2) %}
 
                     <div class="progress my-4 p-0">
@@ -73,16 +68,14 @@
 
                     {% set i_hymns = {'indice':0} %}
                     {% for i in range(1, 481) %}
+                        <div class="mt-2 px-1 col-auto">
                         {% if i in list_hymns_alternative_approved %}
-                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
-                                <button class="btn btn-passou col-11" data-bs-toggle="modal" data-date="{{ hymns['alternative'][i_hymns.indice]['date_approvation'] }}" data-instructor="{{ hymns['alternative'][i_hymns.indice]['instructor'] }}" data-obs="{{ hymns['alternative'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_alternative" onclick="configura_modal_cancel_alternative({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
-                            </div>
+                            <button class="btn btn-passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-dateAlternative="{{ hymns['alternative'][i_hymns.indice]['date_approvation'] }}" data-instructorAlternative="{{ hymns['alternative'][i_hymns.indice]['instructor'] }}" data-obsAlternative="{{ hymns['alternative'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_alternative" onclick="configura_modal_cancel_alternative({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
                             {% set _= i_hymns.update({'indice':i_hymns.indice+1}) %}
                         {% else %}
-                            <div class="col-3 d-flex justify-content-center mt-2 p-0">
-                                <button id="approveHymn_{{ i }}" class="btn btn-nao_passou col-11" data-bs-toggle="modal" data-bs-target="#modalAprovacaoAlternativa" onclick="configura_modal_alternative({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
-                            </div>
+                            <button id="approveHymn_{{ i }}" class="btn btn-nao_passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#modalAprovacaoAlternativa" onclick="configura_modal_alternative({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
                         {% endif %}
+                        </div>
                     {% endfor %}
                 </div>
             </div>
@@ -270,15 +263,18 @@
     
         btn_hymn.forEach(function(button) {
             button.addEventListener('click', function() {
-                var date = button.getAttribute('data-date');
-                var instructor = button.getAttribute('data-instructor');
-                var obs = button.getAttribute('obs')
-                document.getElementById('dateApprovedPrincipal').value = date
-                document.getElementById('instructorApprovedPrincipal').value = instructor
-                document.getElementById('observationsApprovedPrincipal').textContent = obs
-                document.getElementById('dateApprovedAlternative').value = date
-                document.getElementById('instructorApprovedAlternative').value = instructor
-                document.getElementById('observationsApprovedAlternaticeada').textContent = obs
+                var datePrincipal = button.getAttribute('data-datePrincipal');
+                var dateAlternative = button.getAttribute('data-dateAlternative');
+                var instructorPrincipal = button.getAttribute('data-instructorPrincipal');
+                var instructorAlternative = button.getAttribute('data-instructorAlternative');
+                var obsPrincipal = button.getAttribute('data-obsPrincipal')
+                var obsAlternative = button.getAttribute('data-obsAlternative')
+                document.getElementById('dateApprovedPrincipal').value = datePrincipal
+                document.getElementById('instructorApprovedPrincipal').value = instructorPrincipal
+                document.getElementById('observationsApprovedPrincipal').textContent = obsPrincipal
+                document.getElementById('dateApprovedAlternative').value = dateAlternative
+                document.getElementById('instructorApprovedAlternative').value = instructorAlternative
+                document.getElementById('observationsApprovedAlternaticeada').textContent = obsAlternative
             });
         });
     </script>

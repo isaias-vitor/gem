@@ -1,6 +1,7 @@
 from supabase import create_client
 from os import getenv
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -53,6 +54,35 @@ class SupabaseClient:
             print('Erro ao inserir no banco de dados!')
             print(e)
 
+    def saveApprovalFixingExercice(self, date, lesson, inst_id, cand_id):
+        print(f'{date} - {lesson} - {inst_id} - {cand_id}')
+        data = {
+            'numero':lesson,
+            'usuario_id':cand_id,
+            'instrutor_id':inst_id,
+            'data':date.isoformat(),
+        }
+        try:
+            response = self.client.table('msa_fixacao').insert(data).execute()
+        except Exception as e:
+            print('Erro ao inserir no banco de dados!')
+            print(e)
+    
+    def saveApprovalBona(self, date, obs, lesson, inst_id, cand_id, is_parcial):
+        data = {
+            'numero':lesson,
+            'usuario_id':cand_id,
+            'instrutor_id':inst_id,
+            'data':date.isoformat(),
+            'observacao': obs,
+            'parcial':is_parcial
+        }
+        try:
+            response = self.client.table('msa_pratico').insert(data).execute()
+        except Exception as e:
+            print('Erro ao inserir no banco de dados!')
+            print(e)
+    
     def cancelApprovalPrincipal(self, hymn, cand_id):
         try:
             response = self.client.table('hinos_vp').delete().eq('numero', hymn).eq('usuario_id', cand_id).execute()
@@ -63,6 +93,20 @@ class SupabaseClient:
     def cancelApprovalAlternative(self, hymn, cand_id):
         try:
             response = self.client.table('hinos_va').delete().eq('numero', hymn).eq('usuario_id', cand_id).execute()
+        except Exception as e:
+            print('Erro ao remover do banco de dados!')
+            print(e)
+    
+    def cancelApprovalFixing(self, lesson, cand_id):
+        try:
+            response = self.client.table('msa_fixacao').delete().eq('numero', lesson).eq('usuario_id', cand_id).execute()
+        except Exception as e:
+            print('Erro ao remover do banco de dados!')
+            print(e)
+
+    def cancelApprovalPactical(self, lesson, cand_id):
+        try:
+            response = self.client.table('msa_pratico').delete().eq('numero', lesson).eq('usuario_id', cand_id).execute()
         except Exception as e:
             print('Erro ao remover do banco de dados!')
             print(e)
@@ -99,9 +143,52 @@ class SupabaseClient:
         except:
             print('Erro ao buscar hinos aprovados')
 
+    def seekApprovedMsaLessons(self, act_student):
+
+        try:
+            lessons = {'fixacao':[], 'pratico':[]}
+            response_fixacao = self.client.table('msa_fixacao').select('*').eq('usuario_id', int(act_student)).execute()
+            for lesson in response_fixacao.data:
+                inst = self.client.table('users').select('nome').eq('id', lesson['instrutor_id']).execute()
+                inst = inst.data
+                inst = inst[0]['nome']
+
+                date_approvation = datetime.strptime(lesson['data'], "%Y-%m-%d")
+                date_approvation = date_approvation.strftime("%d/%m/%Y")
+
+                lessons['fixacao'].append({
+                    'number':lesson['numero'],
+                    'date_approvation':date_approvation,
+                    'instructor':inst
+                })
+            response_bona = self.client.table('msa_pratico').select('*').eq('usuario_id', int(act_student)).execute()
+            for lesson in response_bona.data:
+                inst = self.client.table('users').select('nome').eq('id', lesson['instrutor_id']).execute()
+                inst = inst.data
+                inst = inst[0]['nome']
+
+                lessons['pratico'].append({
+                    'number':lesson['numero'],
+                    'date_approvation':lesson['data'],
+                    'instructor':inst,
+                    'obs':lesson['observacao'], 
+                    'parcial':lesson['parcial']
+                })
+            return lessons
+        except:
+            print('Erro ao buscar lições do MSA aprovadas')
+
     def seekStudents(self):
         try:
             response = self.client.table('users').select('nome', 'id').eq('nivel', 'aluno').execute()
             return response.data
         except:
             print('Erro ao buscar alunos!')
+
+    def modifyStatusPractical(self, lesson, cand_id, status):
+        print('llllllllllllllllllllllllllllllllllllll')
+        try:
+            response = self.client.table('msa_pratico').update({'parcial': status}).eq('usuario_id', cand_id).eq('numero', lesson).execute()
+        except Exception as e:
+            print('Erro ao modificar status da lição!')
+            print(e)
