@@ -4,95 +4,92 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from datetime import timedelta
+import os
 
 from .routes import routes
 from .forms import *
 from .database import SupabaseClient
 
-app = Flask(__name__)
-app.register_blueprint(routes)
-app.secret_key = 'truco'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Sessão permanente por 30 dias
-
-
-# Configuração do Flask-Login
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'  # Redireciona para a página de login se não autenticado
-
-# Definindo o comportamento do login
-@app.before_request
-def make_session_permanent():
-    session.permanent = True  # Faz a sessão ser permanente
-
-
-# Modelo de usuário
-class User(UserMixin):
-    def __init__(self, data):
-        self.id = data['id']  # Flask-Login exige que o atributo seja `id`
-        self.username = data['nome']  # Nome do usuário
-        self.nivel = data['nivel']  # Nível do usuário
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(routes)
     
-    def __repr__(self):
-        return f'<User {self.username}>'
+    # Usar variável de ambiente para a secret key em produção
+    app.secret_key = os.environ.get('SECRET_KEY', 'truco')
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
-# Carregar usuário pelo Flask-Login usando os dados armazenados na sessão
-@login_manager.user_loader
-def load_user(user_id):
-    user_data = session.get('user_data')  # Recupera os dados do usuário da sessão
-    if user_data and str(user_data['id']) == str(user_id):
-        return User(user_data)  # Retorna um objeto User reconstruído
-    return None  # Retorna None se o usuário não estiver na sessão
+    # Configuração do Flask-Login
+    login_manager = LoginManager(app)
+    login_manager.login_view = 'login'
 
-# Rota de Login
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        username = form.username.data
-        password = form.password.data
-        try_login = SupabaseClient().userLogin(username, password)  # Verifica no banco
+    # Modelo de usuário
+    class User(UserMixin):
+        def __init__(self, data):
+            self.id = data['id']
+            self.username = data['nome']
+            self.nivel = data['nivel']
+        
+        def __repr__(self):
+            return f'<User {self.username}>'
 
-        if try_login:
-            user = User(try_login)  # Cria um objeto User
-            login_user(user)  # Registra o usuário no Flask-Login
+    @login_manager.user_loader
+    def load_user(user_id):
+        user_data = session.get('user_data')
+        if user_data and str(user_data['id']) == str(user_id):
+            return User(user_data)
+        return None
 
-            # Armazena os dados do usuário na sessão
-            session['user_data'] = {
-                'id': try_login['id'],
-                'nome': try_login['nome'],
-                'nivel': try_login['nivel']
-            }
+    @app.before_request
+    def make_session_permanent():
+        session.permanent = True
 
-            if try_login['nivel'] == 'instrutor':
-                students = SupabaseClient().seekStudents()
-                session['students'] = students
-                session['act_student'] = {}
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        form = LoginForm()
+        if form.validate_on_submit():
+            username = form.username.data
+            password = form.password.data
+            try_login = SupabaseClient().userLogin(username, password)
 
-            flash('Login realizado com sucesso!', 'success')
-            return redirect(url_for('routes.ficha'))
-        else:
-            flash('Credenciais inválidas, tente novamente.', 'danger')
-    
-    return render_template('login.html', form=form)
+            if try_login:
+                user = User(try_login)
+                login_user(user)
 
-# Rota de Logout
-@app.route('/logout')
-def logout():
-    logout_user()
-    session.pop('user_data', None)  # Remove os dados da sessão ao deslogar
-    flash('Você saiu da conta.', 'info')
-    return redirect(url_for('login'))
+                session['user_data'] = {
+                    'id': try_login['id'],
+                    'nome': try_login['nome'],
+                    'nivel': try_login['nivel']
+                }
 
-# Página inicial (redireciona para login)
-@app.route('/')
-def home():
-    return redirect(url_for('login'))
+                if try_login['nivel'] == 'instrutor':
+                    students = SupabaseClient().seekStudents()
+                    session['students'] = students
+                    session['act_student'] = {}
 
-# Dashboard de exemplo
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return f"Bem-vindo, {current_user.username}! Seu ID é {current_user.id}. Seu nível é {current_user.nivel}."
+                flash('Login realizado com sucesso!', 'success')
+                return redirect(url_for('routes.ficha'))
+            else:
+                flash('Credenciais inválidas, tente novamente.', 'danger')
+        
+        return render_template('login.html', form=form)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    @app.route('/logout')
+    def logout():
+        logout_user()
+        session.pop('user_data', None)
+        flash('Você saiu da conta.', 'info')
+        return redirect(url_for('login'))
+
+    @app.route('/')
+    def home():
+        return redirect(url_for('login'))
+
+    @app.route('/dashboard')
+    @login_required
+    def dashboard():
+        return f"Bem-vindo, {current_user.username}! Seu ID é {current_user.id}. Seu nível é {current_user.nivel}."
+
+    return app
+
+# Criação da instância do app
+app = create_app()
