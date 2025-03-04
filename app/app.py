@@ -64,7 +64,8 @@ def create_app():
                 if try_login['nivel'] == 'instrutor':
                     students = SupabaseClient().seekStudents()
                     session['students'] = students
-                    session['act_student'] = {}
+                
+                session['act_student'] = {}
 
                 flash('Login realizado com sucesso!', 'success')
                 return redirect(url_for('routes.ficha'))

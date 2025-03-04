@@ -1,12 +1,19 @@
 from flask import *
 from flask_login import login_required
-# from flask_form import current_user
-
 from .database import SupabaseClient
 from .forms import *
 
 routes = Blueprint('routes', __name__)
 db = SupabaseClient()
+
+# Função auxiliar para garantir que um aluno está selecionado
+def ensure_student_selected():
+    if 'act_student' not in session or not session['act_student']:
+        if 'students' in session and session['students']:  # Se houver alunos disponíveis
+            session['act_student'] = session['students'][0]  # Define o primeiro aluno como padrão
+        else:
+            flash("Nenhum aluno disponível. Adicione um aluno primeiro.", "warning")
+            return redirect(url_for('routes.trocaAluno'))  # Redireciona para escolha do aluno
 
 # Rota Protegida
 @routes.route('/ficha')
@@ -17,13 +24,17 @@ def ficha():
 @routes.route('/hinos', methods=['GET', 'POST'])
 @login_required
 def hinos():
+    check_redirect = ensure_student_selected()
+    if check_redirect:
+        return check_redirect
+
     hymns_approved = db.seekApprovedHymns(session['act_student']['id'])
 
     form_approval_principal_hymn = ApprovalFormPrincipalHymn()
     form_approval_alternative_hymn = ApprovalFormAlternativeHymn()
     cancel_approval_principal = CancelApprovalButtonPrincipal()
     cancel_approval_alternative = CancelApprovalButtonAlternative()
-    
+
     form_type = request.form.get("form_type")
 
     if form_type == "principal_hymn" and form_approval_principal_hymn.validate_on_submit():
@@ -54,10 +65,19 @@ def hinos():
         db.cancelApprovalAlternative(hymn, candidate_id)
         return redirect(url_for('routes.hinos'))
 
-    hymns_numbers_principal = list(hymn_number['number'] for hymn_number in hymns_approved['principal'])
-    hymns_numbers_alternative = list(hymn_number['number'] for hymn_number in hymns_approved['alternative'])
+    hymns_numbers_principal = [hymn_number['number'] for hymn_number in hymns_approved['principal']]
+    hymns_numbers_alternative = [hymn_number['number'] for hymn_number in hymns_approved['alternative']]
 
-    return render_template('hinos.html', form_approval_principal_hymn=form_approval_principal_hymn, form_approval_alternative_hymn=form_approval_alternative_hymn, cancel_approval_principal=cancel_approval_principal,cancel_approval_alternative=cancel_approval_alternative, hymns=hymns_approved, list_hymns_principal_approved=hymns_numbers_principal, list_hymns_alternative_approved=hymns_numbers_alternative, students=session['students'],act_student=session['act_student'])
+    return render_template('hinos.html', 
+                           form_approval_principal_hymn=form_approval_principal_hymn,
+                           form_approval_alternative_hymn=form_approval_alternative_hymn,
+                           cancel_approval_principal=cancel_approval_principal,
+                           cancel_approval_alternative=cancel_approval_alternative,
+                           hymns=hymns_approved, 
+                           list_hymns_principal_approved=hymns_numbers_principal, 
+                           list_hymns_alternative_approved=hymns_numbers_alternative,
+                           students=session['students'], 
+                           act_student=session['act_student'])
 
 @routes.route('/trocaAluno', methods=['GET', 'POST'])
 @login_required
@@ -73,6 +93,10 @@ def trocaAluno():
 @routes.route('/teoria', methods=['GET', 'POST'])
 @login_required
 def teoria():
+    check_redirect = ensure_student_selected()
+    if check_redirect:
+        return check_redirect
+
     lessons_approved = db.seekApprovedMsaLessons(session['act_student']['id'])
 
     form_approval_fixing_exercice = ApprovalFormFixingExercice()
@@ -117,10 +141,8 @@ def teoria():
             db.cancelApprovalPactical(lesson, candidate_id)
         return redirect(url_for('routes.teoria'))
 
-    fixing_lessons_approved_number = list(lesson_number['number'] for lesson_number in lessons_approved['fixacao'])
-    practical_lessons_approved_number = list(lesson_number['number'] for lesson_number in lessons_approved['pratico'])
-
-    print(lessons_approved['pratico'])
+    fixing_lessons_approved_number = [lesson_number['number'] for lesson_number in lessons_approved['fixacao']]
+    practical_lessons_approved_number = [lesson_number['number'] for lesson_number in lessons_approved['pratico']]
 
     return render_template('teoria.html', 
                            form_approval_fixing_exercice=form_approval_fixing_exercice,
@@ -132,5 +154,4 @@ def teoria():
                            fixing_lessons_approved=lessons_approved['fixacao'],
                            practical_lessons_approved=lessons_approved['pratico'],
                            fixing_lessons_approved_number=fixing_lessons_approved_number,
-                           practical_lessons_approved_number=practical_lessons_approved_number,
-                           )
+                           practical_lessons_approved_number=practical_lessons_approved_number)
