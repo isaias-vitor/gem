@@ -82,13 +82,16 @@ def hinos():
 @routes.route('/trocaAluno', methods=['GET', 'POST'])
 @login_required
 def trocaAluno():
-    students = session['students']
-    for student in students:
-        if student['id'] == int(request.form.get('select_field')):
-            session['act_student'] = student
-            break
-    
-    return redirect(url_for('routes.teoria'))
+    if session['user_data']['nivel']:
+        students = session['students']
+        for student in students:
+            if student['id'] == int(request.form.get('select_field')):
+                session['act_student'] = student
+                break
+        
+        return redirect(url_for('routes.teoria'))
+    else:
+        return None
 
 @routes.route('/teoria', methods=['GET', 'POST'])
 @login_required
