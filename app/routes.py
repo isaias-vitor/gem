@@ -82,16 +82,20 @@ def hinos():
 @routes.route('/trocaAluno', methods=['GET', 'POST'])
 @login_required
 def trocaAluno():
-    if session['user_data']['nivel']:
-        students = session['students']
-        for student in students:
-            if student['id'] == int(request.form.get('select_field')):
-                session['act_student'] = student
-                break
-        
-        return redirect(url_for('routes.teoria'))
-    else:
-        return None
+    # Verificar se o usuário logado é um instrutor
+    if current_user.nivel != 'instrutor':
+        flash('Você precisa ser um instrutor para acessar os alunos.', 'danger')
+        return redirect(url_for('routes.dashboard'))  # Ou redirecionar para uma página apropriada
+    
+    # Se o usuário for instrutor, podemos continuar a troca de alunos
+    students = session['students']  # Garantido que isso existe apenas para instrutores
+
+    for student in students:
+        if student['id'] == int(request.form.get('select_field')):
+            session['act_student'] = student
+            break
+    
+    return redirect(url_for('routes.teoria'))
 
 @routes.route('/teoria', methods=['GET', 'POST'])
 @login_required
