@@ -43,21 +43,18 @@
 
                     <div class="progress my-4 p-0">
                         <div class="progress-bar" role="progressbar" aria-label="Info example" style="width: {{progress}}%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">{{progress}}%</div>
-                    </div>
-
-                    <div class="d-flex justify-content-around row">
-                        {% set i_hymns = {'indice':0} %}
-                        {% for i in range(1, 481) %}
-                            <div class="mt-2 d-flex justify-content-center px-1 col-auto">
-                            {% if i in list_hymns_principal_approved %}
-                                <button class="btn btn-passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-datePrincipal="{{ hymns['principal'][i_hymns.indice]['date_approvation'] }}" data-instructorPrincipal="{{ hymns['principal'][i_hymns.indice]['instructor'] }}" data-obsPrincipal="{{ hymns['principal'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_principal" onclick="configura_modal_cancel_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
-                                {% set _= i_hymns.update({'indice':i_hymns.indice+1}) %}
-                            {% else %}
-                                <button id="approveHymn_{{ i }}" class="btn btn-nao_passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#modalAprovacaoPrincipal" onclick="configura_modal_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
-                            {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
+                    </div>                   
+                    {% set i_hymns = {'indice':0} %}
+                    {% for i in range(1, 481) %}
+                        <div class="mt-2 p-1 col-auto">
+                        {% if i in list_hymns_principal_approved %}
+                            <button class="btn btn-passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-datePrincipal="{{ hymns['principal'][i_hymns.indice]['date_approvation'] }}" data-instructorPrincipal="{{ hymns['principal'][i_hymns.indice]['instructor'] }}" data-obsPrincipal="{{ hymns['principal'][i_hymns.indice]['obs'] }}" data-bs-target="#modal_postApproval_principal" onclick="configura_modal_cancel_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
+                            {% set _= i_hymns.update({'indice':i_hymns.indice+1}) %}
+                        {% else %}
+                            <button id="approveHymn_{{ i }}" class="btn btn-nao_passou p-3 m-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#modalAprovacaoPrincipal" onclick="configura_modal_principal({{ i }}, {{act_student.id}})">{{ (i | string).zfill(3) }}</button>
+                        {% endif %}
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
             <div class="tab-pane fade" id="alternative_voice" role="tabpanel" aria-labelledby="alternative_voice-tab">
