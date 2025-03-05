@@ -83,7 +83,7 @@ def hinos():
 @login_required
 def trocaAluno():
     # Verificar se o usuário logado é um instrutor
-    if current_user.nivel != 'instrutor':
+    if session['user_data']['nivel'] != 'instrutor':
         flash('Você precisa ser um instrutor para acessar os alunos.', 'danger')
         return redirect(url_for('routes.dashboard'))  # Ou redirecionar para uma página apropriada
     
